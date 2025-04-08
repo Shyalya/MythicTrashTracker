@@ -1,4 +1,11 @@
-Beta Version 0.1
+![Screenshot 2025-04-08 104016](https://github.com/user-attachments/assets/08333c30-3540-4a6d-bcea-c16ca5d93830)
+
+
+
+
+
+
+Beta Version 0.12
 
 Zählt Kills in Dungeons/Raids und Mythic Dungeons/Raids ohne immer .mythic trash aufrufen zu müssen
 
@@ -34,3 +41,4 @@ Change line 30 to “de
 In Scholomance zählt der Counter hoch, da dort einige Gegner einfach sterben und per log gezählt werden.
 
 In Scholomance the counter counts up, as some enemies simply die there and are counted per log.
+
