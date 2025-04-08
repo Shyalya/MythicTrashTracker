@@ -789,21 +789,19 @@ end
 local combatFrame = CreateFrame("Frame")
 combatFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 combatFrame:SetScript("OnEvent", function(self, event, ...)
-    DebugPrint("COMBAT_LOG_EVENT_UNFILTERED ausgelöst.") -- Debug-Ausgabe
-    ProcessKill(...)
+    -- Manuelles Auslesen der Parameter
+    local timestamp, subEvent, _, _, _, _, _, destGUID, destName = ...
+    ProcessKill(timestamp, subEvent, destGUID, destName)
 end)
---------------------------------------------------------------------------------
--- 6. Fortschrittsbalken-Funktionen
---------------------------------------------------------------------------------
 
-function ProcessKill(timestamp, subEvent, _, _, _, _, _, destGUID, destName)
-    -- Überprüfe, ob das Event ein UNIT_DIED ist
-    if subEvent ~= "UNIT_DIED" then
+function ProcessKill(timestamp, subEvent, destGUID, destName)
+    -- Nur PARTY_KILL-Events verarbeiten
+    if subEvent ~= "PARTY_KILL" then
         DebugPrint("Ignoriere SubEvent: " .. tostring(subEvent))
         return
     end
 
-    -- Überprüfe, ob der Name in der IgnoredEnemies-Liste enthalten ist
+    -- Überprüfen, ob der Name in der IgnoredEnemies-Liste enthalten ist
     if IgnoredEnemies and destName then
         for _, ignoredName in ipairs(IgnoredEnemies) do
             if destName == ignoredName then
@@ -813,13 +811,17 @@ function ProcessKill(timestamp, subEvent, _, _, _, _, _, destGUID, destName)
         end
     end
 
-    -- Erhöhe die Kill-Zählung
+    -- Kill-Zählung erhöhen
     MyAddon.cumulativeKills = MyAddon.cumulativeKills + 1
     DebugPrint("Mob getötet. Gesamtanzahl Kills: " .. MyAddon.cumulativeKills)
 
     -- Fortschrittsbalken aktualisieren
     UpdateProgress()
 end
+
+--------------------------------------------------------------------------------
+-- 6. Fortschrittsbalken-Funktionen
+--------------------------------------------------------------------------------
 
 function UpdateProgress()
     for i, bar in ipairs(progressBarGroup) do
