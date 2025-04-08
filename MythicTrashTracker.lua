@@ -1,6 +1,6 @@
 -- MythicTrashTracker.lua
 print("MythicTrashTracker loaded!")
-DEBUG = true
+DEBUG = false
 
 function DebugPrint(msg)
     if DEBUG then
@@ -28,6 +28,20 @@ local OPTIONS = {
     progressBarWidth = 200, -- Standardbreite des Fortschrittsbalkens
     progressBarHeight = 20,
     language = "en" -- Standardmäßig Englisch
+}
+
+-- Liste der Gegner, die ignoriert werden sollen
+local IgnoredEnemies = {
+    "Rabbit",
+    "Squirrel",
+    "Frog",
+    "Chicken",
+    "Rat",
+    "Deer",
+    "Sheep",
+    "Cat",
+    "Dog",
+    "Snake"
 }
 
 local progressBar, missingBuffText
@@ -720,7 +734,7 @@ function CheckBuffs()
                 DebugPrint("Keine Buffs aus der Gruppe gefunden: " .. (buffGroup.name or "Unbenannt"))
             end
         end
-    end
+    end -- Hier wurde das fehlende `end` hinzugefügt
 
     if not allGroupsPresent then
         local warningText = OPTIONS.language == "de" and "Du hast deine MythicBuffs vergessen!" or "You forgot your MythicBuffs!"
@@ -782,11 +796,21 @@ end)
 -- 6. Fortschrittsbalken-Funktionen
 --------------------------------------------------------------------------------
 
-function ProcessKill(timestamp, subEvent, ...)
+function ProcessKill(timestamp, subEvent, _, _, _, _, _, destGUID, destName)
     -- Überprüfe, ob das Event ein UNIT_DIED ist
     if subEvent ~= "UNIT_DIED" then
         DebugPrint("Ignoriere SubEvent: " .. tostring(subEvent))
         return
+    end
+
+    -- Überprüfe, ob der Name in der IgnoredEnemies-Liste enthalten ist
+    if IgnoredEnemies and destName then
+        for _, ignoredName in ipairs(IgnoredEnemies) do
+            if destName == ignoredName then
+                DebugPrint("Ignoriere Gegner: " .. destName)
+                return
+            end
+        end
     end
 
     -- Erhöhe die Kill-Zählung
@@ -1036,4 +1060,3 @@ local function DelayedExecution(delay, func)
         end)
     end
 end
-

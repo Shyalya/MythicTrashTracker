@@ -1,7 +1,7 @@
 ## Interface: 30300
 ## Title: MythicTrashTracker
 ## Notes: Shows up ur Progress for Mythic Trash.
-## Version: 1.0
+## Version: 0.12
 ## Author: Shyalya
 InstanceRaidsData.lua
 InstanceDungeonsData.lua
