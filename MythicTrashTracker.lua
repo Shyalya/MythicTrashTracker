@@ -1,6 +1,6 @@
 -- MythicTrashTracker.lua
 print("MythicTrashTracker loaded!")
-DEBUG = false
+DEBUG = true
 
 function DebugPrint(msg)
     if DEBUG then
@@ -15,11 +15,11 @@ local CHECK_BUFFS_ENABLED = true
 --------------------------------------------------------------------------------
 
 local RequiredBuffGroups = {
-    {81072, 81170, 81555, name = "Mythic Aura of Preservation"}, -- Gruppe 1
-    {81073, 81171, 81557, name = "Mythic Aura of Shielding"},    -- Gruppe 2
-    {81074, 81172, 81554, name = "Mythic Aura of Berserking"},   -- Gruppe 3
-    {81071, 81169, 81556, name = "Mythic Aura of Resistance"},   -- Gruppe 4
-    {81120, 81175, name = "Mythic Aura of the Hammer"}           -- Gruppe 5
+    { "Mythic Aura of Preservation", name = "Mythic Aura of Preservation" }, -- Gruppe 1
+    { "Mythic Aura of Shielding", name = "Mythic Aura of Shielding" },       -- Gruppe 2
+    { "Mythic Aura of Berserking", name = "Mythic Aura of Berserking" },     -- Gruppe 3
+    { "Mythic Aura of Resistance", name = "Mythic Aura of Resistance" },     -- Gruppe 4
+    { "Mythic Aura of the Hammer", name = "Mythic Aura of the Hammer" }      -- Gruppe 5
 }
 local OPTIONS = {
     trackBuffs = true, -- Buff-Tracking aktivieren
@@ -696,11 +696,17 @@ function CheckBuffs()
     for i, buffGroup in ipairs(RequiredBuffGroups) do
         if OPTIONS.buffGroups[i] then -- Nur aktivierte Gruppen prüfen
             local groupFound = false
-            for _, buffID in ipairs(buffGroup) do
-                if OPTIONS.buffGroups[i][buffID] then -- Nur aktivierte Buffs prüfen
+            DebugPrint("Prüfe Buff-Gruppe: " .. (buffGroup.name or "Unbenannt"))
+            for _, buffName in ipairs(buffGroup) do
+                if OPTIONS.buffGroups[i][buffName] then -- Nur aktivierte Buffs prüfen
+                    DebugPrint("Prüfe Buff-Name: " .. buffName)
                     for j = 1, 40 do
-                        local _, _, _, _, _, _, _, _, _, spellID = UnitBuff("player", j)
-                        if spellID == buffID then
+                        local name = UnitBuff("player", j)
+                        if name then
+                            DebugPrint("Gefundener Buff: " .. name)
+                        end
+                        if name == buffName then
+                            DebugPrint("Buff gefunden: " .. buffName)
                             groupFound = true
                             break
                         end
@@ -711,7 +717,7 @@ function CheckBuffs()
 
             if not groupFound then
                 allGroupsPresent = false
-                DebugPrint("Keine Buffs aus der Gruppe gefunden: " .. buffGroup.name)
+                DebugPrint("Keine Buffs aus der Gruppe gefunden: " .. (buffGroup.name or "Unbenannt"))
             end
         end
     end
@@ -719,14 +725,18 @@ function CheckBuffs()
     if not allGroupsPresent then
         local warningText = OPTIONS.language == "de" and "Du hast deine MythicBuffs vergessen!" or "You forgot your MythicBuffs!"
         DebugPrint("Setze missingBuffText: " .. warningText)
-        missingBuffText:SetText(warningText)
+        if missingBuffText then
+            missingBuffText:SetText(warningText)
+        end
 
         if OPTIONS.soundEnabled then
             PlaySoundFile("Sound\\Interface\\RaidWarning.wav", "Master")
         end
     else
         DebugPrint("Alle Buffs vorhanden.")
-        missingBuffText:SetText("")
+        if missingBuffText then
+            missingBuffText:SetText("") -- Buff-Warnung zurücksetzen
+        end
     end
 end
 
