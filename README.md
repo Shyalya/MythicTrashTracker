@@ -1,8 +1,17 @@
 ![Screenshot 2025-04-08 104016](https://github.com/user-attachments/assets/08333c30-3540-4a6d-bcea-c16ca5d93830)
 
+![Screenshot 2025-04-08 104359](https://github.com/user-attachments/assets/1c67663b-b9be-47cb-bf4e-77e892617d26)
 
 
+Funktionen:
+Auflisten aller Bossgegner mit der erforderlichen Anzahl an Trashmobs.
+Buff Checker ob man seine Mythic Buffs abgeholt hat.
+Nach erreichen der erforderlichen Anzahl Trashmobs ertönt ein Signalton.
 
+Optionen 
+
+Buff Filter und De-/aktivieren des Buff Checkers
+Größen Änderung der Balken und Spracheinstellungen. und einstellen des Signaltons
 
 
 Beta Version 0.12
