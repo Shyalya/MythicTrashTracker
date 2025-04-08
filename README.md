@@ -23,6 +23,16 @@ Buff Filter und De-/aktivieren des Buff Checkers,
 Größen Änderung der Balken und Spracheinstellungen und einstellen des Signaltons
 
 
+Functions:
+
+List all bosses with the required number of Trashmobs,
+Buff Checker whether you have collected your Mythic Buffs,
+After reaching the required number of Trashmobs you will hear a beep.
+
+Options 
+
+Buff filter and deactivation/activation of the buff checker,
+Change the size of the bars and language settings and set the signal tone
 
 
 Known bugs:
@@ -55,3 +65,8 @@ In Scholomance zählt der Counter hoch, da dort einige Gegner einfach sterben un
 
 In Scholomance the counter counts up, as some enemies simply die there and are counted per log.
 
+5.
+
+TrashCounter wird immer aufgerufen egal ob normal oder mythisch
+
+TrashCounter is always called regardless of whether normal or mythical
