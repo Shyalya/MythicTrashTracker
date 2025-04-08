@@ -243,7 +243,7 @@ function CreateOptionsFrame()
     -- Copyright-Hinweis
     local copyrightText = optionsFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     copyrightText:SetPoint("BOTTOM", optionsFrame, "BOTTOM", 0, 10)
-    copyrightText:SetText("|cFF00FF00MythicTrashTracker Beta Version 0.1 © 2025 by Shyalya")
+    copyrightText:SetText("|cFF00FF00MythicTrashTracker Beta Version 0.12 © 2025 by Shyalya")
 
     -- Buff Tracker Überschrift
     buffTrackerTitle = optionsFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
