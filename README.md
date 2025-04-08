@@ -1,3 +1,11 @@
+Beta Version 0.12
+
+Zählt Kills in Dungeons/Raids und Mythic Dungeons/Raids ohne immer .mythic trash aufrufen zu müssen
+
+
+Counts kills in Dungeons/Raids and Mythic Dungeons/Raids without always having to call .mythic trash
+
+
 ![Screenshot 2025-04-08 104016](https://github.com/user-attachments/assets/08333c30-3540-4a6d-bcea-c16ca5d93830)
 
 ![Screenshot 2025-04-08 104359](https://github.com/user-attachments/assets/1c67663b-b9be-47cb-bf4e-77e892617d26)
@@ -15,12 +23,7 @@ Buff Filter und De-/aktivieren des Buff Checkers,
 Größen Änderung der Balken und Spracheinstellungen und einstellen des Signaltons
 
 
-Beta Version 0.12
 
-Zählt Kills in Dungeons/Raids und Mythic Dungeons/Raids ohne immer .mythic trash aufrufen zu müssen
-
-
-Counts kills in Dungeons/Raids and Mythic Dungeons/Raids without always having to call .mythic trash
 
 Known bugs:
 
