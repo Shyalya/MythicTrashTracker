@@ -26,12 +26,7 @@ Language does not change completely in the addon
 If someone needs German, customize it in the lua itself:
 Change line 30 to “de
 
-4. 
-
-BuffTracker zeigt weiterhin Buff fehlend an, auch wenn Buffs aktiviert wurden.
-BuffTracker continues to show Buff missing, even if Buffs have been activated.
-
-5.
+4.
 
 In Scholomance zählt der Counter hoch, da dort einige Gegner einfach sterben und per log gezählt werden.
 In Scholomance the counter counts up, as some enemies simply die there and are counted per log.
