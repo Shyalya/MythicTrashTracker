@@ -10,11 +10,13 @@ Known bugs:
 1. 
 
 Zählt alle Kills in der Instanz in der man sich befindet auch wenn man mit diesem nichts zu tun hat 
+
 Counts all kills in the instance you are in, even if you have nothing to do with it 
 
 2. 
 
 Zählt auch Critter Tode
+
 Critter deaths also count
 
 3. 
@@ -22,6 +24,7 @@ Critter deaths also count
 Sprache stellt sich nicht komplett um im Addon
 Falls jemand Deutsch braucht in der lua selbst anpassen:
 Zeile 30 in "de" ändern
+
 Language does not change completely in the addon
 If someone needs German, customize it in the lua itself:
 Change line 30 to “de
@@ -29,4 +32,5 @@ Change line 30 to “de
 4.
 
 In Scholomance zählt der Counter hoch, da dort einige Gegner einfach sterben und per log gezählt werden.
+
 In Scholomance the counter counts up, as some enemies simply die there and are counted per log.
