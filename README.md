@@ -1,0 +1,22 @@
+Beta Version 0.1
+Zählt alle Kills in Dungeons/Raids und Mythic Dungeons/Raids
+
+Counts all kills in Dungeons/Raids and Mythic Dungeons/Raids
+
+Known bugs:
+1. 
+Zählt alle Kills in der Instanz in der man sich befindet auch wenn man mit diesem nichts zu tun hat 
+Counts all kills in the instance you are in, even if you have nothing to do with it 
+2. 
+Zählt auch Critter Tode
+Critter deaths also count
+3. 
+Sprache stellt sich nicht komplett um im Addon
+Falls jemand Deutsch braucht in der lua selbst anpassen:
+Zeile 30 in "de" ändern
+Language does not change completely in the addon
+If someone needs German, customize it in the lua itself:
+Change line 30 to “de
+4. 
+BuffTracker zeigt weiterhin Buff fehlend an, auch wenn Buffs aktiviert wurden.
+BuffTracker continues to show Buff missing, even if Buffs have been activated.
