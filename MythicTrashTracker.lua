@@ -243,7 +243,7 @@ function CreateOptionsFrame()
     -- Copyright-Hinweis
     local copyrightText = optionsFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     copyrightText:SetPoint("BOTTOM", optionsFrame, "BOTTOM", 0, 10)
-    copyrightText:SetText("|cFF00FF00MythicTrashTracker Beta Version 0.12 © 2025 by Shyalya")
+    copyrightText:SetText("|cFF00FF00MythicTrashTracker Beta Version 0.14 © 2025 by Shyalya")
 
     -- Buff Tracker Überschrift
     buffTrackerTitle = optionsFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
@@ -1060,5 +1060,17 @@ local function DelayedExecution(delay, func)
                 func()
             end
         end)
+    end
+end
+
+--------------------------------------------------------------------------------
+-- Slash-Befehl für MythicTrashTracker
+--------------------------------------------------------------------------------
+SLASH_MYTHICTRASHTRACKER1 = "/mtt"
+SlashCmdList["MYTHICTRASHTRACKER"] = function(msg)
+    if OpenOptionsWindow then
+        OpenOptionsWindow()
+    else
+        print("|cFFFF0000[MythicTrashTracker]: Optionen-Fenster konnte nicht geöffnet werden.")
     end
 end
