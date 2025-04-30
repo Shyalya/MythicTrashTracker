@@ -164,7 +164,7 @@ InstanceDungeonsData = {
         { bossName = "Mekgineer Steamrigger",              requiredKills = 60 },
         { bossName = "Warlord Kalitresh",    requiredKills = 90 },
     },
-    ["Hellfire Citadel: Hellfire Ramparts"] = {
+    ["Hellfire Citadel: Ramparts"] = {
         { bossName = "Watchkeeper Gargolmar",        requiredKills = 35 },
         { bossName = "Omor the Unscarred",              requiredKills = 50 },
         { bossName = "Vazruden the Herald",    requiredKills = 60 },
