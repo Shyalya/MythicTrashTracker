@@ -353,6 +353,7 @@ InstanceDungeonsData = {
         { bossName = "Sjonnar the Ironshaper",    requiredKills = 80 },
     },
     ["Gundrak"] = {
+        { bossName = "Eck the Ferocious", requiredKills = 0 },
         { bossName = "Moorabi",    requiredKills = 5 },
         { bossName = "Draakari Elemental",        requiredKills = 10 },
         { bossName = "Slad'ran",    requiredKills = 25 },
