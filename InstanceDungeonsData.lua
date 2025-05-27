@@ -318,5 +318,41 @@ InstanceDungeonsData = {
         { bossName = "Hex Lord Malacrass",    requiredKills = 60 },
         { bossName = "Zul'jin",    requiredKills = 65 },
     },
+    ["Azjol-Nerub"] = {
+        { bossName = "Krik'thir the Gatewatcher",    requiredKills = 5 },
+        { bossName = "Hadronox",        requiredKills = 15 },
+        { bossName = "Anub'arak",    requiredKills = 35 },
+    },
+    ["Utgarde Keep"] = {
+        { bossName = "Prince Keleseth",    requiredKills = 15 },
+        { bossName = "Dalronn the Controller",        requiredKills = 40 },
+        { bossName = "Ingvar the Plunderer",    requiredKills = 60 },
+    },
+    ["The Nexus"] = {
+        { bossName = "Grand Magus Telestra",    requiredKills = 20 },
+        { bossName = "Anomalus",        requiredKills = 50 },
+        { bossName = "Ormorokk the Tree-Shaper",    requiredKills = 90 },
+        { bossName = "Keristrasza",    requiredKills = 110 },
+    },
+    ["Ahn'Kahet: The Old Kingdom"] = {
+        { bossName = "Elder Nadox",    requiredKills = 15 },
+        { bossName = "Prince Taldaraan",        requiredKills = 30 },
+        { bossName = "Amanitar",    requiredKills = 40 },
+        { bossName = "Jedoga Shadowseeker",    requiredKills = 50 },
+        { bossName = "Herold Volazj",    requiredKills = 55 },
+    },
+    ["Halls of Lightning"] = {
+        { bossName = "General Bjarngrim",    requiredKills = 5 },
+        { bossName = "Volkhan",        requiredKills = 30 },
+        { bossName = "Ionar",    requiredKills = 50 },
+        { bossName = "Loken",    requiredKills = 75 },
+    },
+    ["Halls of Stone"] = {
+        { bossName = "Krystallus",    requiredKills = 40 },
+        { bossName = "Maiden of Grief",        requiredKills = 60 },
+        { bossName = "Sjonnar the Ironshaper",    requiredKills = 80 },
+    },
+    
+
 }
 
