@@ -352,6 +352,12 @@ InstanceDungeonsData = {
         { bossName = "Maiden of Grief",        requiredKills = 60 },
         { bossName = "Sjonnar the Ironshaper",    requiredKills = 80 },
     },
+    ["Gundrak"] = {
+        { bossName = "Moorabi",    requiredKills = 5 },
+        { bossName = "Draakari Elemental",        requiredKills = 10 },
+        { bossName = "Slad'ran",    requiredKills = 25 },
+        { bossName = "Gal'Darah",    requiredKills = 35 },
+    },
     
 
 }
