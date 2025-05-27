@@ -334,7 +334,7 @@ InstanceDungeonsData = {
         { bossName = "Ormorokk the Tree-Shaper",    requiredKills = 90 },
         { bossName = "Keristrasza",    requiredKills = 110 },
     },
-    ["Ahn'Kahet: The Old Kingdom"] = {
+    ["Ahn'kahet: The Old Kingdom"] = {
         { bossName = "Elder Nadox",    requiredKills = 15 },
         { bossName = "Prince Taldaraan",        requiredKills = 30 },
         { bossName = "Amanitar",    requiredKills = 40 },
