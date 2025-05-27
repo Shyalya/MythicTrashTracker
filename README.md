@@ -1,4 +1,4 @@
-Beta Version 0.12
+Beta Version 0.15
 
 Zählt Kills in Dungeons/Raids und Mythic Dungeons/Raids ohne immer .mythic trash aufrufen zu müssen
 
