@@ -144,7 +144,7 @@ InstanceDungeonsData = {
         { bossName = "Grandmaster Vorpil",    requiredKills = 80 },
         { bossName = "Murmur",    requiredKills = 110 },
     },
-    ["Auchindoun: Crypts"] = {
+    ["Auchindoun: Auchenai Crypts"] = {
         { bossName = "Shirrak the Dead Watcher",        requiredKills = 25 },
         { bossName = "Exarch Maladaar",              requiredKills = 50 },
     },
@@ -359,6 +359,13 @@ InstanceDungeonsData = {
         { bossName = "Slad'ran",    requiredKills = 25 },
         { bossName = "Gal'Darah",    requiredKills = 35 },
     },
+    [The Obsidian Sanctum"] = {
+        { bossName = "Vesperon", requiredKills = 5 },
+        { bossName = "Tenebron",    requiredKills = 10 },
+        { bossName = "Shadron",        requiredKills = 10 },
+        { bossName = "Sartharion",    requiredKills = 5 },
+    },
+
     
 
 }
