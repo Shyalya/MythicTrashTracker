@@ -359,14 +359,7 @@ InstanceDungeonsData = {
         { bossName = "Slad'ran",    requiredKills = 25 },
         { bossName = "Gal'Darah",    requiredKills = 35 },
     },
-    [The Obsidian Sanctum"] = {
-        { bossName = "Vesperon", requiredKills = 5 },
-        { bossName = "Tenebron",    requiredKills = 10 },
-        { bossName = "Shadron",        requiredKills = 10 },
-        { bossName = "Sartharion",    requiredKills = 5 },
-    },
-
-    
+      
 
 }
 
