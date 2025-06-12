@@ -8,28 +8,73 @@ function DebugPrint(msg)
     end
 end
 
-local CHECK_BUFFS_ENABLED = true
+-- 1. SavedVariables initialisieren (NICHT local!)
+MythicTrashTrackerDB = MythicTrashTrackerDB or {}
 
---------------------------------------------------------------------------------
--- Globale Variablen
---------------------------------------------------------------------------------
-
-local RequiredBuffGroups = {
-    { "Mythic Aura of Preservation", name = "Mythic Aura of Preservation" }, -- Gruppe 1
-    { "Mythic Aura of Shielding", name = "Mythic Aura of Shielding" },       -- Gruppe 2
-    { "Mythic Aura of Berserking", name = "Mythic Aura of Berserking" },     -- Gruppe 3
-    { "Mythic Aura of Resistance", name = "Mythic Aura of Resistance" },     -- Gruppe 4
-    { "Mythic Aura of the Hammer", name = "Mythic Aura of the Hammer" }      -- Gruppe 5
-}
+-- 2. Standard-Optionen
 local OPTIONS = {
-    trackBuffs = true, -- Buff-Tracking aktivieren
-    soundEnabled = true, -- Progress-Sound aktivieren/deaktivieren
-    selectedSound = "Sound\\Interface\\LevelUp.wav", -- Standard-Sound von WoW
-    progressBarWidth = 200, -- Standardbreite des Fortschrittsbalkens
+    trackBuffs = true,
+    soundEnabled = true,
+    selectedSound = "Sound\\Interface\\LevelUp.wav",
+    progressBarWidth = 200,
     progressBarHeight = 20,
-    language = "en" -- Standardmäßig Englisch
+    language = "en",
+    buffGroups = nil -- wird beim Laden/Initialisieren gesetzt
 }
 
+-- 3. Buff-Gruppen Definition
+local RequiredBuffGroups = {
+    { "Mythic Aura of Preservation", name = "Mythic Aura of Preservation" },
+    { "Mythic Aura of Shielding", name = "Mythic Aura of Shielding" },
+    { "Mythic Aura of Berserking", name = "Mythic Aura of Berserking" },
+    { "Mythic Aura of Resistance", name = "Mythic Aura of Resistance" },
+    { "Mythic Aura of the Hammer", name = "Mythic Aura of the Hammer" }
+}
+
+-- 4. Optionen und BuffGroups beim Addon-Laden übernehmen
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+frame:SetScript("OnEvent", function(self, event, addon)
+    if addon == "MythicTrashTracker" then
+        -- Optionen übernehmen
+        if MythicTrashTrackerDB.options then
+            for k, v in pairs(MythicTrashTrackerDB.options) do
+                OPTIONS[k] = v
+            end
+        end
+        -- BuffGroups laden (einfache true/false-Liste)
+        if MythicTrashTrackerDB.buffGroups then
+            OPTIONS.buffGroups = {}
+            for i = 1, #RequiredBuffGroups do
+                OPTIONS.buffGroups[i] = MythicTrashTrackerDB.buffGroups[i] or false
+            end
+        end
+        -- Falls nach dem Laden keine BuffGroups vorhanden sind, Standard initialisieren
+        if not OPTIONS.buffGroups or #OPTIONS.buffGroups == 0 then
+            OPTIONS.buffGroups = {}
+            for i = 1, #RequiredBuffGroups do
+                OPTIONS.buffGroups[i] = true
+            end
+            DebugPrint("BuffGroups auf Standardwerte gesetzt.")
+        end
+    end
+end)
+
+-- 6. Manueller Speicher-Button (kannst du überall im Code aufrufen)
+function SaveMythicTrashTrackerOptions()
+    MythicTrashTrackerDB.options = {}
+    for k, v in pairs(OPTIONS) do
+        if type(v) ~= "function" and type(v) ~= "userdata" then
+            MythicTrashTrackerDB.options[k] = v
+        end
+    end
+    -- BuffGroups als vollständige Liste speichern
+    MythicTrashTrackerDB.buffGroups = {}
+    for i = 1, #RequiredBuffGroups do
+        MythicTrashTrackerDB.buffGroups[i] = OPTIONS.buffGroups[i] or false
+    end
+    print("|cFF00FF00[MythicTrashTracker]: Optionen wurden gespeichert!")
+end
 -- Liste der Gegner, die ignoriert werden sollen
 local IgnoredEnemies = {
     "Rabbit",
@@ -53,18 +98,18 @@ MyAddon.currentBossIndex = 1
 local isInInstance = false -- Status: Spieler in Instanz
 
 -- Globale Optionen erweitern
-if not OPTIONS.buffGroups then
-    OPTIONS.buffGroups = {}
-    for i, group in ipairs(RequiredBuffGroups) do
-        OPTIONS.buffGroups[i] = {}
-        for _, buffID in ipairs(group) do
-            OPTIONS.buffGroups[i][buffID] = true -- Standardmäßig alle Buffs aktiv
-        end
-    end
-    DebugPrint("OPTIONS.buffGroups erfolgreich initialisiert.")
-end
+--if not OPTIONS.buffGroups then
+--    OPTIONS.buffGroups = {}
+--    for i, group in ipairs(RequiredBuffGroups) do
+--        OPTIONS.buffGroups[i] = {}
+--        for _, buffID in ipairs(group) do
+--            OPTIONS.buffGroups[i][buffID] = true -- Standardmäßig alle Buffs aktiv
+ --       end
+--    end
+--    DebugPrint("OPTIONS.buffGroups erfolgreich initialisiert.")
+--end
 
-DebugPrint("OPTIONS.buffGroups initialisiert: " .. tostring(#OPTIONS.buffGroups))
+--DebugPrint("OPTIONS.buffGroups initialisiert: " .. tostring(#OPTIONS.buffGroups))
 
 --------------------------------------------------------------------------------
 -- Minimap-Button erstellen und initialisieren
@@ -179,6 +224,7 @@ local AVAILABLE_SOUNDS = {
 function OpenOptionsWindow()
     if MythicTrackerOptionsFrame then
         MythicTrackerOptionsFrame:Show()
+        UpdateBuffGroupButtons() -- <-- HIER!
     else
         CreateOptionsFrame()
         MythicTrackerOptionsFrame:Show()
@@ -195,15 +241,12 @@ end
 
 -- Funktion zum Erstellen des Optionen-Fensters
 function CreateOptionsFrame()
-    if not OPTIONS.buffGroups then
-        DebugPrint("Fehler: OPTIONS.buffGroups ist nil. Initialisiere erneut.")
+     if OPTIONS.buffGroups == nil then
         OPTIONS.buffGroups = {}
-        for i, group in ipairs(RequiredBuffGroups) do
-            OPTIONS.buffGroups[i] = {}
-            for _, buffID in ipairs(group) do
-                OPTIONS.buffGroups[i][buffID] = true -- Standardmäßig alle Buffs aktiv
-            end
+        for i = 1, #RequiredBuffGroups do
+            OPTIONS.buffGroups[i] = true
         end
+        DebugPrint("BuffGroups auf Standardwerte gesetzt (OptionsFrame).")
     end
 
     if MythicTrackerOptionsFrame then
@@ -243,7 +286,7 @@ function CreateOptionsFrame()
     -- Copyright-Hinweis
     local copyrightText = optionsFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     copyrightText:SetPoint("BOTTOM", optionsFrame, "BOTTOM", 0, 10)
-    copyrightText:SetText("|cFF00FF00MythicTrashTracker Beta Version 0.14 © 2025 by Shyalya")
+    copyrightText:SetText("|cFF00FF00MythicTrashTracker Beta Version 0.2 © 2025 by Shyalya")
 
     -- Buff Tracker Überschrift
     buffTrackerTitle = optionsFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
@@ -293,31 +336,37 @@ function CreateOptionsFrame()
             OPTIONS.buffGroups[i] = not allEnabled
         end
 
-        UpdateBuffGroupButtons()
-        --print("|cFFFFA500[MythicTrashTracker]: " .. (OPTIONS.language == "de" and "Alle Buff-Gruppen " or "All Buff Groups ") .. (allEnabled and (OPTIONS.language == "de" and "deaktiviert." or "disabled.") or (OPTIONS.language == "de" and "aktiviert." or "enabled.")))
+        UpdateBuffGroupButtons() -- <-- Auch hier!
     end)
 
--- Buff-Tracking Checkbox
-local buffsCheckbox = CreateFrame("CheckButton", "BuffsCheckbox", optionsFrame, "UICheckButtonTemplate")
-buffsCheckbox:SetPoint("LEFT", toggleAllBuffsButton, "RIGHT", 20, 0) -- Rechts neben dem Toggle All Buffs Button
-buffsCheckbox:SetChecked(OPTIONS.trackBuffs)
-local buffsCheckboxText = buffsCheckbox:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-buffsCheckboxText:SetPoint("LEFT", buffsCheckbox, "RIGHT", 5, 0)
-buffsCheckboxText:SetText(OPTIONS.language == "de" and "Buff-Tracking aktivieren" or "Enable Buff Tracking")
-buffsCheckbox:SetScript("OnClick", function(self)
-    OPTIONS.trackBuffs = self:GetChecked()
-    if OPTIONS.trackBuffs then
-        EnableBuffChecker()
-    else
-        DisableBuffChecker()
-    end
-    print("|cFFFFA500[MythicTrashTracker]: " .. (OPTIONS.language == "de" and "Buff-Tracking " or "Buff Tracking ") .. (OPTIONS.trackBuffs and (OPTIONS.language == "de" and "aktiviert." or "enabled.") or (OPTIONS.language == "de" and "deaktiviert." or "disabled.")))
+-- Checkboxen für Buff-Gruppen in einem Raster
+local buffGroupButtons = {}
+local numColumns = 2
+local columnWidth = 250
+local rowHeight = 30
 
-    -- Buff-Warnung zurücksetzen, wenn Buff-Tracking deaktiviert wird
-    if not OPTIONS.trackBuffs and missingBuffText then
-        missingBuffText:SetText("")
+for i, group in ipairs(RequiredBuffGroups) do
+    local column = (i - 1) % numColumns
+    local row = math.floor((i - 1) / numColumns)
+
+    local button = CreateFrame("CheckButton", nil, optionsFrame, "UICheckButtonTemplate")
+    button:SetPoint("TOPLEFT", buffTrackerTitle, "BOTTOMLEFT", column * columnWidth, -10 - row * rowHeight)
+    button:SetChecked(OPTIONS.buffGroups[i])
+    local buttonText = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    buttonText:SetPoint("LEFT", button, "RIGHT", 5, 0)
+    buttonText:SetText(group.name)
+    button:SetScript("OnClick", function(self)
+        OPTIONS.buffGroups[i] = self:GetChecked()
+        UpdateBuffGroupButtons()
+    end)
+    table.insert(buffGroupButtons, button)
+end
+
+function UpdateBuffGroupButtons()
+    for i, button in ipairs(buffGroupButtons) do
+        button:SetChecked(OPTIONS.buffGroups[i])
     end
-end)
+end
 
     -- Progress-Sound Checkbox
     local soundCheckbox = CreateFrame("CheckButton", "SoundCheckbox", optionsFrame, "UICheckButtonTemplate")
@@ -388,43 +437,18 @@ end)
     _G[progressBarHeightSlider:GetName() .. "High"]:SetText("50")
     _G[progressBarHeightSlider:GetName() .. "Text"]:SetText(OPTIONS.language == "de" and "Höhe" or "Height")
 
-
-
-    -- Checkboxen für Buff-Gruppen in einem Raster
-    local buffGroupButtons = {}
-    local numColumns = 2 -- Anzahl der Spalten
-    local columnWidth = 250 -- Breite der Spalten
-    local rowHeight = 30 -- Höhe der Reihen
-
-    for i, group in ipairs(RequiredBuffGroups) do
-        local column = (i - 1) % numColumns -- Spaltenindex (0-basiert)
-        local row = math.floor((i - 1) / numColumns) -- Reihenindex (0-basiert)
-
-        local button = CreateFrame("CheckButton", nil, optionsFrame, "UICheckButtonTemplate")
-        button:SetPoint("TOPLEFT", buffTrackerTitle, "BOTTOMLEFT", column * columnWidth, -10 - row * rowHeight)
-        button:SetChecked(OPTIONS.buffGroups[i])
-        local buttonText = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        buttonText:SetPoint("LEFT", button, "RIGHT", 5, 0)
-        buttonText:SetText(group.name) -- Buff-Gruppenname anzeigen
-        button:SetScript("OnClick", function(self)
-            OPTIONS.buffGroups[i] = self:GetChecked()
-            print("|cFFFFA500[MythicTrashTracker]: " .. group.name .. (self:GetChecked() and " aktiviert." or " deaktiviert."))
-        end)
-        table.insert(buffGroupButtons, button)
-    end
-
-    -- Funktion zum Aktualisieren der Buttons
-    function UpdateBuffGroupButtons()
-        for i, button in ipairs(buffGroupButtons) do
-            button:SetChecked(OPTIONS.buffGroups[i])
-        end
-    end
-
-
-
     optionsFrame:Hide() -- Standardmäßig versteckt
-end
 
+    -- Speicher-Button
+    local saveButton = CreateFrame("Button", nil, optionsFrame, "UIPanelButtonTemplate")
+    saveButton:SetSize(120, 25)
+    saveButton:SetPoint("BOTTOMRIGHT", optionsFrame, "BOTTOMRIGHT", -20, 20)
+    saveButton:SetText(OPTIONS.language == "de" and "Optionen speichern" or "Save Options")
+    saveButton:SetScript("OnClick", function()
+        SaveMythicTrashTrackerOptions()
+    end)
+    UpdateBuffGroupButtons()
+end -- <--- Das ist das EINZIGE end für CreateOptionsFrame!
 --------------------------------------------------------------------------------
 -- Minimap-Button erstellen und initialisieren
 --------------------------------------------------------------------------------
@@ -662,22 +686,33 @@ function InitializeInstanceProgress()
 
     isInInstance = true
 
-    -- Überprüfen, ob `InstanceDungeonsData` geladen ist
-    if not InstanceDungeonsData then
-        DebugPrint("Fehler: InstanceDungeonsData ist nil.")
-        MyAddon.activeBossList = {}
-        return
+    local foundBossList = nil
+
+    if instanceType == "party" and InstanceDungeonsData then
+        for key, bossList in pairs(InstanceDungeonsData) do
+            if string.find(instanceName, key, 1, true) then
+                foundBossList = bossList
+                break
+            end
+        end
+    elseif instanceType == "raid" and InstanceRaidsData then
+        for key, bossList in pairs(InstanceRaidsData) do
+            if string.find(instanceName, key, 1, true) then
+                foundBossList = bossList
+                break
+            end
+        end
     end
 
-    -- Überprüfen, ob die aktuelle Instanz in den Daten vorhanden ist
-    if not InstanceDungeonsData[instanceName] then
-        DebugPrint("Keine Dungeon-Daten für die Instanz gefunden: " .. tostring(instanceName))
+    if not foundBossList then
+        DebugPrint("Keine Instanzdaten für die Instanz gefunden: " .. tostring(instanceName))
         MyAddon.activeBossList = {}
         return
     end
 
     -- Instanzdaten laden
-    MyAddon.activeBossList = InstanceDungeonsData[instanceName] or {}
+    MyAddon.activeBossList = foundBossList
+
     DebugPrint("Bossliste für die Instanz geladen: " .. tostring(instanceName))
     for i, boss in ipairs(MyAddon.activeBossList) do
         DebugPrint("Boss " .. i .. ": " .. boss.bossName .. ", Required Kills: " .. boss.requiredKills)
@@ -712,29 +747,25 @@ function CheckBuffs()
             local groupFound = false
             DebugPrint("Prüfe Buff-Gruppe: " .. (buffGroup.name or "Unbenannt"))
             for _, buffName in ipairs(buffGroup) do
-                if OPTIONS.buffGroups[i][buffName] then -- Nur aktivierte Buffs prüfen
-                    DebugPrint("Prüfe Buff-Name: " .. buffName)
-                    for j = 1, 40 do
-                        local name = UnitBuff("player", j)
-                        if name then
-                            DebugPrint("Gefundener Buff: " .. name)
-                        end
-                        if name == buffName then
-                            DebugPrint("Buff gefunden: " .. buffName)
-                            groupFound = true
-                            break
-                        end
+                for j = 1, 40 do
+                    local name = UnitBuff("player", j)
+                    if name then
+                        DebugPrint("Gefundener Buff: " .. name)
                     end
-                    if groupFound then break end
+                    if name == buffName then
+                        DebugPrint("Buff gefunden: " .. buffName)
+                        groupFound = true
+                        break
+                    end
                 end
+                if groupFound then break end
             end
-
             if not groupFound then
                 allGroupsPresent = false
                 DebugPrint("Keine Buffs aus der Gruppe gefunden: " .. (buffGroup.name or "Unbenannt"))
             end
         end
-    end -- Hier wurde das fehlende `end` hinzugefügt
+    end -- <--- Das ist das EINZIGE end für die for-Schleife!
 
     if not allGroupsPresent then
         local warningText = OPTIONS.language == "de" and "Du hast deine MythicBuffs vergessen!" or "You forgot your MythicBuffs!"
@@ -1074,3 +1105,35 @@ SlashCmdList["MYTHICTRASHTRACKER"] = function(msg)
         print("|cFFFF0000[MythicTrashTracker]: Optionen-Fenster konnte nicht geöffnet werden.")
     end
 end
+
+local saveFrame = CreateFrame("Frame")
+saveFrame:RegisterEvent("PLAYER_LOGOUT")
+saveFrame:SetScript("OnEvent", function()
+    MythicTrashTrackerDB.options = {}
+    for k, v in pairs(OPTIONS) do
+        if type(v) ~= "function" and type(v) ~= "userdata" then
+            MythicTrashTrackerDB.options[k] = v
+        end
+    end
+    -- BuffGroups als vollständige Liste speichern
+    MythicTrashTrackerDB.buffGroups = {}
+    for i = 1, #RequiredBuffGroups do
+        MythicTrashTrackerDB.buffGroups[i] = OPTIONS.buffGroups[i] or false
+    end
+end)
+function SaveMythicTrashTrackerOptions()
+    MythicTrashTrackerDB.options = {}
+    for k, v in pairs(OPTIONS) do
+        if type(v) ~= "function" and type(v) ~= "userdata" then
+            MythicTrashTrackerDB.options[k] = v
+        end
+    end
+    -- BuffGroups als vollständige Liste speichern
+    MythicTrashTrackerDB.buffGroups = {}
+    for i = 1, #RequiredBuffGroups do
+        MythicTrashTrackerDB.buffGroups[i] = OPTIONS.buffGroups[i] or false
+    end
+    print("|cFF00FF00[MythicTrashTracker]: Optionen wurden gespeichert!")
+end
+
+

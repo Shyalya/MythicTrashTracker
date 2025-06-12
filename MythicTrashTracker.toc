@@ -3,6 +3,7 @@
 ## Notes: Shows up ur Progress for Mythic Trash.
 ## Version: 0.12
 ## Author: Shyalya
+## SavedVariables: MythicTrashTrackerDB
 InstanceRaidsData.lua
 InstanceDungeonsData.lua
 MythicTrashTracker.lua

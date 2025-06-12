@@ -66,6 +66,6 @@ InstanceRaidsData = {
         { bossName = "Vesperon", requiredKills = 5 },
         { bossName = "Tenebron",    requiredKills = 10 },
         { bossName = "Shadron",        requiredKills = 10 },
-        { bossName = "Sartharion",    requiredKills = 5 },
+        { bossName = "Sartharion",    requiredKills = 15 },
     },
 }
