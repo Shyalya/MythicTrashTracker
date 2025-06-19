@@ -713,6 +713,9 @@ function InitializeInstanceProgress()
     -- Instanzdaten laden
     MyAddon.activeBossList = foundBossList
 
+    -- Fortschrittsdaten laden (NACH dem Setzen der Bossliste!)
+    LoadProgressData()
+
     DebugPrint("Bossliste für die Instanz geladen: " .. tostring(instanceName))
     for i, boss in ipairs(MyAddon.activeBossList) do
         DebugPrint("Boss " .. i .. ": " .. boss.bossName .. ", Required Kills: " .. boss.requiredKills)
@@ -825,14 +828,45 @@ combatFrame:SetScript("OnEvent", function(self, event, ...)
     ProcessKill(timestamp, subEvent, destGUID, destName)
 end)
 
+-- 1. Fortschrittsdaten beim Addon-Laden wiederherstellen
+function LoadProgressData()
+    MyAddon.bossKills = {}
+    if MythicTrashTrackerDB.progress and MythicTrashTrackerDB.progress.bossKills then
+        -- Für jeden Boss den gespeicherten Wert übernehmen, sonst 0
+        for i = 1, #MyAddon.activeBossList do
+            MyAddon.bossKills[i] = MythicTrashTrackerDB.progress.bossKills[i] or 0
+        end
+        MyAddon.currentBossIndex = MythicTrashTrackerDB.progress.currentBossIndex or 1
+        DebugPrint("Fortschrittsdaten geladen: Boss-Kills=" .. table.concat(MyAddon.bossKills, ", ") .. ", BossIndex=" .. MyAddon.currentBossIndex)
+    else
+        -- Initialisiere alle auf 0
+        for i = 1, #MyAddon.activeBossList do
+            MyAddon.bossKills[i] = 0
+        end
+        MyAddon.currentBossIndex = 1
+    end
+end
+
+function SaveProgressData()
+    -- Kopiere die Tabelle, nicht Referenz!
+    local bossKillsCopy = {}
+    for i = 1, #MyAddon.activeBossList do
+        bossKillsCopy[i] = MyAddon.bossKills[i] or 0
+    end
+    MythicTrashTrackerDB.progress = {
+        bossKills = bossKillsCopy,
+        currentBossIndex = MyAddon.currentBossIndex,
+    }
+    DebugPrint("Fortschrittsdaten gespeichert.")
+end
+
+-- Kills für den jeweiligen Boss erhöhen
 function ProcessKill(timestamp, subEvent, destGUID, destName)
-    -- Nur PARTY_KILL-Events verarbeiten
     if subEvent ~= "PARTY_KILL" then
         DebugPrint("Ignoriere SubEvent: " .. tostring(subEvent))
         return
     end
 
-    -- Überprüfen, ob der Name in der IgnoredEnemies-Liste enthalten ist
     if IgnoredEnemies and destName then
         for _, ignoredName in ipairs(IgnoredEnemies) do
             if destName == ignoredName then
@@ -842,35 +876,31 @@ function ProcessKill(timestamp, subEvent, destGUID, destName)
         end
     end
 
-    -- Kill-Zählung erhöhen
-    MyAddon.cumulativeKills = MyAddon.cumulativeKills + 1
-    DebugPrint("Mob getötet. Gesamtanzahl Kills: " .. MyAddon.cumulativeKills)
+    -- Jeden Balken hochzählen!
+    for i = 1, #MyAddon.activeBossList do
+        MyAddon.bossKills[i] = (MyAddon.bossKills[i] or 0) + 1
+        DebugPrint("Mob getötet. Boss " .. i .. " Kills: " .. MyAddon.bossKills[i])
+    end
 
-    -- Fortschrittsbalken aktualisieren
+    SaveProgressData()
     UpdateProgress()
 end
 
---------------------------------------------------------------------------------
--- 6. Fortschrittsbalken-Funktionen
---------------------------------------------------------------------------------
-
+-- Fortschrittsbalken aktualisieren
 function UpdateProgress()
     for i, bar in ipairs(progressBarGroup) do
         local boss = MyAddon.activeBossList[i]
         if boss then
-            local kills = MyAddon.cumulativeKills
+            local kills = MyAddon.bossKills and MyAddon.bossKills[i] or 0
             local requiredKills = boss.requiredKills or 100
             local fraction = kills / requiredKills
 
-            -- Fortschrittsbalken aktualisieren
+            bar:SetMinMaxValues(0, requiredKills)
             bar:SetValue(kills)
-            bar:SetStatusBarColor(1 - fraction, fraction, 0) -- Rot zu Grün
+            bar:SetStatusBarColor(1 - fraction, fraction, 0)
 
-            -- Text korrekt formatieren
             local progressText = string.format("%d/%d - %s", kills, requiredKills, boss.bossName)
             bar.text:SetText(progressText)
-
-            -- Debugging: Fortschrittsbalken-Status ausgeben
             DebugPrint("Aktualisiere Fortschrittsbalken " .. i .. ": " .. progressText)
         else
             DebugPrint("Kein Boss für Fortschrittsbalken " .. i)
@@ -878,52 +908,28 @@ function UpdateProgress()
     end
 end
 
-function ResetProgressForNextBoss()
-    if MyAddon.currentBossIndex < #MyAddon.activeBossList then
-        MyAddon.currentBossIndex = MyAddon.currentBossIndex + 1
-        local currentBoss = MyAddon.activeBossList[MyAddon.currentBossIndex]
-        if not currentBoss then
-            DebugPrint("Fehler: currentBoss ist nil.")
-            return
-        end
-        MyAddon.totalRequiredKills = currentBoss.requiredKills or 0
-        DebugPrint("Wechsel zu Boss '" .. tostring(currentBoss.bossName) .. "'. Ziel: " .. MyAddon.totalRequiredKills .. " Kills.")
-        UpdateProgress()
-    else
-        DebugPrint("Alle Bosse abgeschlossen.")
-        progressBar.text:SetText("Abgeschlossen!")
-        progressBar:SetStatusBarColor(0, 1, 0) -- Grün für abgeschlossen
-        PlayProgressSound()
-    end
-end
-
+-- Fortschritt zurücksetzen
 function ResetProgressBars()
     DebugPrint("Fortschrittsbalken und Daten werden zurückgesetzt.")
-    
-    -- Fortschrittsbalken entfernen
+
     for i, bar in ipairs(progressBarGroup) do
-        DebugPrint("Entferne Fortschrittsbalken: " .. i)
         bar:Hide()
         bar:ClearAllPoints()
-        bar:SetParent(nil) -- Entfernt den Balken vollständig aus dem UI-Parent
+        bar:SetParent(nil)
     end
-    progressBarGroup = {} -- Leere die Liste der Balken
+    progressBarGroup = {}
 
-    -- Fortschrittsdaten zurücksetzen
-    for _, boss in ipairs(MyAddon.activeBossList) do
-        boss.kills = 0
-    end
+    MyAddon.bossKills = {}
     MyAddon.activeBossList = {}
     MyAddon.currentBossIndex = 1
-    MyAddon.cumulativeKills = 0
-    MyAddon.totalRequiredKills = 0
 
-    -- Buff-Warnung zurücksetzen
     if missingBuffText then
         missingBuffText:SetText("")
         DebugPrint("Buff-Warnung zurückgesetzt.")
     end
 
+    MythicTrashTrackerDB.progress = nil
+    DebugPrint("Fortschrittsdaten gelöscht.")
     DebugPrint("Fortschrittsbalken und Daten erfolgreich zurückgesetzt.")
 end
 
@@ -951,160 +957,14 @@ instanceLeaveFrame:SetScript("OnEvent", function(self, event, ...)
     end)
 end)
 
-CreateBossProgressBars()
-UpdateProgress()
-InitializeInstanceProgress()
+-- Entferne diese Zeilen:
+-- CreateBossProgressBars()
+-- UpdateProgress()
+-- InitializeInstanceProgress()
 
-local instanceFrame = CreateFrame("Frame")
-instanceFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-instanceFrame:SetScript("OnEvent", function(self, event, ...)
-    InitializeInstanceProgress()
-end)
-
-instanceLeaveFrame:RegisterEvent("PLAYER_LEAVING_WORLD")
-instanceLeaveFrame:SetScript("OnEvent", function(self, event, ...)
-    if event == "PLAYER_LEAVING_WORLD" then
-        DebugPrint("Spieler verlässt die Welt. Fortschrittsbalken werden zurückgesetzt.")
-        ResetProgressBars()
-    end
-end)
-
--- Lade die Dungeon-Daten
-
-if not MyAddon.activeBossList or #MyAddon.activeBossList == 0 then
-    DebugPrint("MyAddon.activeBossList ist leer oder ungültig.")
-else
-    DebugPrint("MyAddon.activeBossList erfolgreich initialisiert.")
-    for index, boss in ipairs(MyAddon.activeBossList) do
-        DebugPrint("Boss " .. index .. ": " .. tostring(boss.bossName) .. " (Required Kills: " .. tostring(boss.requiredKills) .. ")")
-    end
-end
-
-function UpdateLanguageTexts()
-    if MythicTrackerOptionsFrame then
-        -- Buff Tracker Titel aktualisieren
-        if buffTrackerTitle then
-            buffTrackerTitle:SetText(OPTIONS.language == "de" and "Buff Tracker Optionen" or "Buff Tracker Options")
-        end
-
-        -- Fortschrittsbalken-Breite Titel aktualisieren
-        if progressBarWidthTitle then
-            progressBarWidthTitle:SetText(OPTIONS.language == "de" and "Balkenbreite" or "Bar Width")
-        end
-
-        -- Fortschrittsbalken-Höhe Titel aktualisieren
-        if progressBarHeightTitle then
-            progressBarHeightTitle:SetText(OPTIONS.language == "de" and "Balkenhöhe" or "Bar Height")
-        end
-
-        -- Buff-Tracking Checkbox aktualisieren
-        if buffsCheckboxText then
-            buffsCheckboxText:SetText(OPTIONS.language == "de" and "Buff-Tracking aktivieren" or "Enable Buff Tracking")
-        end
-
-        -- Sound Checkbox aktualisieren
-        if soundCheckboxText then
-            soundCheckboxText:SetText(OPTIONS.language == "de" and "Progress-Sound aktivieren" or "Enable Progress Sound")
-        end
-
-        -- Sound Dropdown aktualisieren
-        if soundDropdown then
-            UIDropDownMenu_SetText(soundDropdown, OPTIONS.language == "de" and "Sound auswählen" or "Select Sound")
-        end
-
-        -- Toggle All Buffs Button aktualisieren
-        if toggleAllBuffsButton then
-            toggleAllBuffsButton:SetText(OPTIONS.language == "de" and "Alle Buffs an/aus" or "Toggle All Buffs")
-        end
-
-        -- Dropdown-Menü Titel aktualisieren
-        if dropdownTitle then
-            dropdownTitle:SetText(OPTIONS.language == "de" and "Optionen-Menü" or "Options Menu")
-        end
-
-        -- **Sprachauswahl Dropdown aktualisieren**
-        if languageDropdown then
-            UIDropDownMenu_SetText(languageDropdown, OPTIONS.language == "de" and "Sprache: Deutsch" or "Language: English")
-        end
-    end
-end
-
-function UpdateBuffTrackingUI()
-    -- Buff-Tracking Checkbox aktualisieren
-    if BuffsCheckbox then
-        BuffsCheckbox:SetChecked(OPTIONS.trackBuffs)
-    end
-
-    -- Dropdown-Menü aktualisieren
-    if languageDropdown then
-        UIDropDownMenu_Initialize(languageDropdown, function(self, level)
-            local info = UIDropDownMenu_CreateInfo()
-            info.text = OPTIONS.language == "de" and "Buff-Tracking an/aus" or "Buff-Tracking on/off"
-            info.checked = OPTIONS.trackBuffs
-            info.func = function()
-                OPTIONS.trackBuffs = not OPTIONS.trackBuffs
-                UpdateBuffTrackingUI()
-                print("|cFFFFA500[MythicTrashTracker]: " .. (OPTIONS.language == "de" and "Buff-Tracking " or "Buff Tracking ") .. (OPTIONS.trackBuffs and (OPTIONS.language == "de" and "aktiviert." or "enabled") or (OPTIONS.language == "de" and "deaktiviert." or "disabled")))
-            end
-            UIDropDownMenu_AddButton(info, level)
-        end)
-    end
-end
-
-function UpdateSoundUI()
-    -- Sound Checkbox aktualisieren
-    if SoundCheckbox then
-        SoundCheckbox:SetChecked(OPTIONS.soundEnabled)
-    end
-
-    -- Dropdown-Menü aktualisieren
-    if languageDropdown then
-        UIDropDownMenu_Initialize(languageDropdown, function(self, level)
-            local info = UIDropDownMenu_CreateInfo()
-            info.text = OPTIONS.language == "de" and "Sound an/aus" or "Sound on/off"
-            info.checked = OPTIONS.soundEnabled
-            info.func = function()
-                OPTIONS.soundEnabled = not OPTIONS.soundEnabled
-                UpdateSoundUI()
-                print("|cFFFFA500[MythicTrashTracker]: " .. (OPTIONS.language == "de" and "Progress-Sound " or "Progress Sound ") .. (OPTIONS.soundEnabled and "aktiviert." or "enabled") or (OPTIONS.language == "de" and "deaktiviert." or "disabled"))
-            end
-            UIDropDownMenu_AddButton(info, level)
-        end)
-    end
-end
-
-if not MythicTrackerOptionsFrame then
-    CreateOptionsFrame()
-end
-UpdateLanguageTexts()
-
-local function DelayedExecution(delay, func)
-    if C_Timer and C_Timer.After then
-        C_Timer.After(delay, func)
-    else
-        -- Fallback, falls C_Timer nicht verfügbar ist
-        local frame = CreateFrame("Frame")
-        frame.startTime = GetTime()
-        frame:SetScript("OnUpdate", function(self, elapsed)
-            if GetTime() - self.startTime >= delay then
-                self:SetScript("OnUpdate", nil)
-                func()
-            end
-        end)
-    end
-end
-
---------------------------------------------------------------------------------
--- Slash-Befehl für MythicTrashTracker
---------------------------------------------------------------------------------
-SLASH_MYTHICTRASHTRACKER1 = "/mtt"
-SlashCmdList["MYTHICTRASHTRACKER"] = function(msg)
-    if OpenOptionsWindow then
-        OpenOptionsWindow()
-    else
-        print("|cFFFF0000[MythicTrashTracker]: Optionen-Fenster konnte nicht geöffnet werden.")
-    end
-end
+-- Die Initialisierung läuft jetzt nur noch über die Events:
+-- PLAYER_ENTERING_WORLD und ZONE_CHANGED_NEW_AREA
+-- (siehe deine Event-Handler oben)
 
 local saveFrame = CreateFrame("Frame")
 saveFrame:RegisterEvent("PLAYER_LOGOUT")
@@ -1134,6 +994,19 @@ function SaveMythicTrashTrackerOptions()
         MythicTrashTrackerDB.buffGroups[i] = OPTIONS.buffGroups[i] or false
     end
     print("|cFF00FF00[MythicTrashTracker]: Optionen wurden gespeichert!")
+end
+
+-- Verzögerte Ausführung (Delay in Sekunden)
+function DelayedExecution(delay, func)
+    local f = CreateFrame("Frame")
+    local elapsed = 0
+    f:SetScript("OnUpdate", function(self, e)
+        elapsed = elapsed + e
+        if elapsed >= delay then
+            self:SetScript("OnUpdate", nil)
+            func()
+        end
+    end)
 end
 
 
